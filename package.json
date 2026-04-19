@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "fs-extra": "^11.3.4",
+    "gray-matter": "^4.0.3",
+    "marked": "^18.0.1",
+    "marked-katex-extension": "^5.1.8",
+    "mustache": "^4.2.0"
+  },
+  "name": "foxgen",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.2.1",
+    "globals": "^17.5.0"
+  },
+  "scripts": {
+    "new": "node index.js new",
+    "gen": "node index.js gen",
+    "clean": "node index.js clean"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs"
+}

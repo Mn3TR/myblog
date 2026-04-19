@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <title>{{title}} - lKB</title>
+    <link rel="stylesheet" href="post.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" onload="renderMathInElement(document.body, {
+        delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+        ],
+        throwOnError : false
+    });"></script>
+</head>
+
+<body>
+    <nav class="top-nav">
+        <a href="index.html">← 返回搜索</a>
+    </nav>
+    <main class="content-wrapper">
+        <header class="article-header">
+            <h1>{{title}}</h1>
+            <div class="meta">{{time}} | {{author}}</div>
+            <div class="tags">
+                {{#tags}}<span class="tag-pill">#{{.}}</span>{{/tags}}
+            </div>
+        </header>
+        <hr>
+        <div class="markdown-body">
+            {{{content}}}
+        </div>
+    </main>
+</body>
+
+</html>

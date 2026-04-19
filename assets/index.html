@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{title}}</title>
+    <link rel="stylesheet" href="index.css">
+    <link rel="license" href="https://creativecommons.org/publicdomain/zero/1.0/">
+</head>
+
+<body class="home-layout">
+    <div class="hero">
+        <h1 class="logo" onclick="location.href='index.html'">l<span>KB</span></h1>
+
+        <div class="search-wrapper">
+            使用空格分隔多个标签
+            <input type="text" id="searchInput" placeholder="" autofocus autocomplete="off">
+            <div id="results" class="results-list"></div>
+        </div>
+
+        <div class="random-box" id="randomBox">
+            <p>试试看：</p>
+            <div id="luckySlot"></div>
+        </div>
+    </div>
+    
+
+    <script>
+        (async () => {
+            const input = document.getElementById('searchInput');
+            const resContainer = document.getElementById('results');
+            const randomBox = document.getElementById('randomBox');
+            const luckySlot = document.getElementById('luckySlot');
+
+            let index = null;
+            let tags = [];
+
+            try {
+                const res = await fetch('search-index.json');
+                if (!res.ok) {
+                    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+                }
+                index = await res.json();
+                tags = Object.keys(index);
+
+                if (tags.length > 0) {
+                    const rTag = tags[Math.floor(Math.random() * tags.length)];
+                    const rPost = index[rTag][Math.floor(Math.random() * index[rTag].length)];
+                    luckySlot.innerHTML = `<a href="${rPost.url}" class="lucky-title-card">${rPost.title}</a>`;
+                } else {
+                    randomBox.innerHTML = '<p>暂无文章</p>';
+                }
+            } catch (e) {
+                console.error('加载搜索索引失败:', e);
+                randomBox.innerHTML = '<p style="color: #d93025;">⚠️ 加载失败，请刷新页面重试</p>';
+                input.disabled = true;
+                input.placeholder = '加载失败';
+                return;
+            }
+
+            input.oninput = (e) => {
+                const val = e.target.value.toLowerCase().trim();
+
+                if (!val) {
+                    resContainer.innerHTML = '';
+                    randomBox.style.display = 'block';
+                    return;
+                }
+
+                randomBox.style.display = 'none';
+                const searchTags = val.split(/\s+/).filter(t => t.length > 0);
+
+                let results = [];
+                const validSearchTags = searchTags.filter(t => index[t]);
+
+                if (validSearchTags.length > 0) {
+                    results = [...index[validSearchTags[0]]];
+                    for (let i = 1; i < validSearchTags.length; i++) {
+                        const currentUrls = new Set(index[validSearchTags[i]].map(p => p.url));
+                        results = results.filter(p => currentUrls.has(p.url));
+                    }
+                }
+
+                renderResults(results);
+            };
+
+            function renderResults(posts) {
+                if (posts.length === 0) {
+                    resContainer.innerHTML = '<div class="no-data">未找到匹配文章</div>';
+                    return;
+                }
+                resContainer.innerHTML = posts.map(p => `
+                    <div class="search-item" onclick="location.href='${p.url}'">
+                        <strong>${p.title}</strong>
+                        <small>${p.url}</small>
+                    </div>
+                `).join('');
+            }
+        })();
+    </script>
+</body>
+
+</html>
