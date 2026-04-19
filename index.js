@@ -4,6 +4,8 @@ const mustache = require('mustache');
 const { marked } = require('marked');
 const matter = require('gray-matter');
 const markedKatex = require('marked-katex-extension');
+const { SitemapStream, streamToPromise } = require('sitemap');
+const { Readable } = require('stream');
 
 // 2. 配置 marked 使用插件
 marked.use(markedKatex({
@@ -13,6 +15,7 @@ marked.use(markedKatex({
 
 const args = process.argv.slice(2);
 const command = args[0];
+const hostname = "https://lkb.ffffffox.eu.org"
 
 const PATHS = {
     post: path.join(process.cwd(), 'post'),
@@ -66,7 +69,11 @@ async function _generate() {
             return false;
         }
 
-        const tagsIndex = {}; 
+        const tagsIndex = {};
+
+        const links = [];
+        // 添加首页
+        links.push({ url: '/index.html', changefreq: 'daily', priority: 1.0 });
 
         // 1. 生成文章页
         for (const file of files) {
@@ -74,8 +81,17 @@ async function _generate() {
                 const fileContent = await fs.readFile(path.join(PATHS.post, file), 'utf-8');
                 const { data, content } = matter(fileContent);
                 const htmlContent = marked.parse(content);
-                const outputName = file.replace('.md', '.html');
+                const safeBaseName = sanitizeFileName(data.title || file.replace('.md', ''));
+                const outputName = `${safeBaseName}.html`;
                 const rawDate = data.time ? new Date(data.time) : new Date();
+                const lastmod = isNaN(rawDate.getTime()) ? new Date().toISOString() : rawDate.toISOString();
+                links.push({
+                    url: `/${outputName}`,
+                    changefreq: 'weekly',
+                    priority: 0.8,
+                    lastmod: lastmod
+                });
+
 
                 if (isNaN(rawDate.getTime())) {
                     console.warn(`⚠️ 文章 "${file}" 的日期格式无效，使用当前日期`);
@@ -105,7 +121,7 @@ async function _generate() {
         // 2. 生成倒排索引 JSON
         await fs.writeJson(path.join(PATHS.public, 'search-index.json'), tagsIndex);
         console.log('   ✓ 生成搜索索引');
-        
+
         // 3. 生成首页
         const renderedIndex = mustache.render(indexTpl, { title: "FoxGen - 搜索" });
         await fs.writeFile(path.join(PATHS.public, 'index.html'), renderedIndex);
@@ -120,7 +136,23 @@ async function _generate() {
             await fs.copy(PATHS.postCss, path.join(PATHS.public, 'post.css'));
             console.log('   ✓ 复制 post.css');
         }
-        
+
+        console.log('   ✓ 正在通过 sitemap 库构建索引...');
+        const stream = new SitemapStream({ hostname: hostname });
+        const sitemapXml = await streamToPromise(Readable.from(links).pipe(stream)).then(data => data.toString());
+
+        await fs.writeFile(path.join(PATHS.public, 'sitemap.xml'), sitemapXml);
+        console.log('   ✓ 生成 sitemap.xml');
+
+        // 6. 生成 robots.txt
+        const robotsContent = `User-agent: *
+Allow: /
+
+Sitemap: ${hostname}/sitemap.xml`;
+
+        await fs.writeFile(path.join(PATHS.public, 'robots.txt'), robotsContent);
+        console.log('   ✓ 生成 robots.txt');
+
         console.log('✨ FoxGen: 构建成功！');
         return true;
     } catch (e) {
@@ -146,7 +178,7 @@ function sanitizeFileName(title) {
 async function _new() {
     try {
         const title = args[1];
-        
+
         if (!title) {
             console.error('❌ 请提供文章标题');
             console.error('   用法: npm run new "文章标题"');
@@ -163,7 +195,7 @@ async function _new() {
         }
 
         await fs.ensureDir(PATHS.post);
-        
+
         const content = `---
 title: ${title}
 tags: []
@@ -188,7 +220,7 @@ author: Admin
 
 async function main() {
     const validCommands = ['gen', 'new', 'clean'];
-    
+
     if (!command) {
         console.error('❌ 请指定命令');
         console.error('   可用命令: gen, new, clean');
@@ -205,7 +237,7 @@ async function main() {
     }
 
     let success = false;
-    
+
     if (command === 'gen') {
         success = await _generate();
     } else if (command === 'new') {
