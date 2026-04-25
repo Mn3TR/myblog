@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "lKB J-0.md",
+                "file": "lKB J-3.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "lKB J-0"
+              "title": "lKB J-3"
             }
           }
         ]
@@ -176,17 +176,35 @@
     "hiddenItems": {
       "switcher:打开快速切换": false,
       "graph:查看关系图谱": false,
-      "canvas:新建白板": false,
       "daily-notes:打开/创建今天的日记": false,
       "templates:插入模板": false,
       "command-palette:打开命令面板": false,
       "bases:新建数据库": false
     }
   },
-  "active": "15e80a35c4bbe2aa",
+  "active": "602cec1f46beaae4",
   "lastOpenFiles": [
+    "lKB J-2.md",
     "lKB J-1.md",
     "lKB J-0.md",
+    "lKB J-3.md",
+    "未命名.md",
+    "assets/lkb-j-3/title.png",
+    "assets/lkb-j-3/geogebra-export.png",
+    "assets/lkb-j-3",
+    "assets/新建文件夹",
+    "assets/lkb-j-2/title.png",
+    "assets/lkb-j-1/title.png",
+    "assets/lkb-j-1/geogebra-export.png",
+    "assets/lkb-j-1",
+    "assets/LKB-J-1",
+    "().md",
+    "assets/lkb-j-2/geogebra-export.png",
+    "assets/lkb-j-2",
+    "assets",
+    "新建文件夹",
+    "lkb-j-2.md",
+    "lkb.md",
     "未命名.base",
     "2026-04-17.md"
   ]

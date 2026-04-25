@@ -13,6 +13,29 @@ marked.use(markedKatex({
     displayMode: false
 }));
 
+const wikiImageExtension = {
+    name: 'wikiImage',
+    level: 'inline',
+    start(src) { return src.indexOf('[['); },
+    tokenizer(src) {
+        const match = src.match(/^\[\[([^|\]]+?)(?:\|([^\]]+?))?\]\]/);
+        if (match) {
+            return {
+                type: 'wikiImage',
+                raw: match[0],
+                src: match[1].trim(),
+                alt: (match[2] || '').trim(),
+            };
+        }
+    },
+    renderer(token) {
+        const style = 'style="max-width:100%; height:auto;"';
+        return `<img src="${token.src}"${token.alt ? ` alt="${token.alt}"` : ''} ${style}>`;
+    }
+};
+
+marked.use({ extensions: [wikiImageExtension] });
+
 const args = process.argv.slice(2);
 const command = args[0];
 const hostname = "https://lkb.ffffffox.eu.org"
@@ -23,7 +46,8 @@ const PATHS = {
     articleTpl: path.join(process.cwd(), 'assets/template.html'),
     indexTpl: path.join(process.cwd(), 'assets/index.html'),
     indexCss: path.join(process.cwd(), 'assets/index.css'),
-    postCss: path.join(process.cwd(), 'assets/post.css')
+    postCss: path.join(process.cwd(), 'assets/post.css'),
+    assetsIndex: path.join(process.cwd(), 'post/assets')
 };
 
 async function _clean() {
@@ -137,6 +161,13 @@ async function _generate() {
             console.log('   ✓ 复制 post.css');
         }
 
+        //5.拷贝post/assets文件夹
+        if (await fs.pathExists(PATHS.assetsIndex)) {
+            await fs.cp(PATHS.assetsIndex, "public/assets", { recursive: true });
+            console.log('   ✓ 复制 assets');
+        }
+
+        //6.通过 sitemap 库构建索引
         console.log('   ✓ 正在通过 sitemap 库构建索引...');
         const stream = new SitemapStream({ hostname: hostname });
         const sitemapXml = await streamToPromise(Readable.from(links).pipe(stream)).then(data => data.toString());
@@ -144,7 +175,7 @@ async function _generate() {
         await fs.writeFile(path.join(PATHS.public, 'sitemap.xml'), sitemapXml);
         console.log('   ✓ 生成 sitemap.xml');
 
-        // 6. 生成 robots.txt
+        // 7. 生成 robots.txt
         const robotsContent = `User-agent: *
 Allow: /
 
@@ -185,7 +216,7 @@ async function _new() {
             return false;
         }
 
-        const fileName = `${sanitizeFileName(title)}.md`;
+        const fileName = `${title}.md`;
         const filePath = path.join(PATHS.post, fileName);
 
         if (await fs.pathExists(filePath)) {
